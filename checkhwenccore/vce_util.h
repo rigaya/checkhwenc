@@ -49,18 +49,18 @@ bool check_if_vce_available(int deviceId, const RGYParamLogLevel& loglevel);
 tstring check_vce_enc_features(const std::vector<RGY_CODEC>& codecs, int deviceId, const RGYParamLogLevel& loglevel);
 tstring check_vce_dec_features(int deviceId, const RGYParamLogLevel& loglevel);
 
-MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, enc, const wchar_t *);
-MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, dec, const wchar_t *);
-MAP_PAIR_0_1_PROTO(csp, rgy, RGY_CSP, enc, amf::AMF_SURFACE_FORMAT);
+MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, vceenc, const wchar_t *);
+MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, vcedec, const wchar_t *);
+MAP_PAIR_0_1_PROTO(csp, rgy, RGY_CSP, vceenc, amf::AMF_SURFACE_FORMAT);
 MAP_PAIR_0_1_PROTO(loglevel, rgy, int, enc, int);
 MAP_PAIR_0_1_PROTO(frametype, rgy, RGY_PICSTRUCT, enc, amf::AMF_FRAME_TYPE);
 
-const wchar_t * codec_rgy_to_dec_10bit(const RGY_CODEC codec);
+const wchar_t * codec_rgy_to_vcedec_10bit(const RGY_CODEC codec);
 
 const TCHAR *AMFRetString(AMF_RESULT ret);
 
-AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct_rgy_to_enc(RGY_PICSTRUCT picstruct);
-RGY_PICSTRUCT picstruct_enc_to_rgy(AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct);
+AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct_rgy_to_vceenc(RGY_PICSTRUCT picstruct);
+RGY_PICSTRUCT picstruct_vceenc_to_rgy(AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct);
 
 #if !CHECKHWENC
 

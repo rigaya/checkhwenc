@@ -35,9 +35,7 @@
 #if !defined(__CUDA_VIDEO_H__)
 #define __CUDA_VIDEO_H__
 
-#ifndef __dynlink_cuda_h__
-#include "dynlink_cuda.h"
-#endif // __dynlink_cuda_h__
+#include "cuda_drvapi_dynlink.h"
 
 #if defined(_WIN64) || defined(__LP64__) || defined(__x86_64) || defined(AMD64) || defined(_M_AMD64)
 #if (CUDA_VERSION >= 3020) && (!defined(CUDA_FORCE_API_VERSION) || (CUDA_FORCE_API_VERSION >= 3020))

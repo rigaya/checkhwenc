@@ -57,14 +57,14 @@ class RGYFrameData;
 
 #define INIT_MFX_EXT_BUFFER(x, id) { RGY_MEMSET_ZERO(x); (x).Header.BufferId = (id); (x).Header.BufferSz = sizeof(x); }
 
-MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, enc, mfxU32);
-MAP_PAIR_0_1_PROTO(chromafmt, rgy, RGY_CHROMAFMT, enc, mfxU32);
-MAP_PAIR_0_1_PROTO(csp, rgy, RGY_CSP, enc, mfxU32);
+MAP_PAIR_0_1_PROTO(codec, rgy, RGY_CODEC, qsvenc, mfxU32);
+MAP_PAIR_0_1_PROTO(chromafmt, rgy, RGY_CHROMAFMT, qsvenc, mfxU32);
+MAP_PAIR_0_1_PROTO(csp, rgy, RGY_CSP, qsvenc, mfxU32);
 MAP_PAIR_0_1_PROTO(resize_algo, rgy, RGY_VPP_RESIZE_ALGO, enc, int);
 MAP_PAIR_0_1_PROTO(resize_mode, rgy, RGY_VPP_RESIZE_MODE, enc, int);
 
-mfxU16 picstruct_rgy_to_enc(RGY_PICSTRUCT picstruct);
-RGY_PICSTRUCT picstruct_enc_to_rgy(mfxU16 picstruct);
+mfxU16 picstruct_rgy_to_qsvenc(RGY_PICSTRUCT picstruct);
+RGY_PICSTRUCT picstruct_qsvenc_to_rgy(mfxU16 picstruct);
 mfxFrameInfo frameinfo_rgy_to_enc(VideoInfo info);
 mfxFrameInfo frameinfo_rgy_to_enc(const RGYFrameInfo& info, const rgy_rational<int> fps, const rgy_rational<int> sar, const int blockSize);
 VideoInfo videooutputinfo(const mfxInfoMFX& mfx, const mfxExtVideoSignalInfo& vui, const mfxExtChromaLocInfo& chromaloc);
@@ -97,7 +97,7 @@ static inline uint16_t frametype_rgy_to_enc(const RGY_FRAMETYPE frametype) {
 }
 
 static bool fourccShiftUsed(const uint32_t fourcc) {
-    const auto csp = csp_enc_to_rgy(fourcc);
+    const auto csp = csp_qsvenc_to_rgy(fourcc);
     return cspShiftUsed(csp);
 }
 
@@ -123,7 +123,7 @@ static bool gopRefDistAsBframe(const int CodecID) {
 }
 
 static bool gopRefDistAsBframe(RGY_CODEC codec) {
-    return gopRefDistAsBframe(codec_rgy_to_enc(codec));
+    return gopRefDistAsBframe(codec_rgy_to_qsvenc(codec));
 }
 
 static RGY_CSP getMFXCsp(const RGY_CHROMAFMT chroma, const int bitdepth) {

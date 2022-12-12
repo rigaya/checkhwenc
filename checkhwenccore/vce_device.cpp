@@ -249,7 +249,7 @@ amf::AMFCapsPtr VCEDevice::getEncCaps(RGY_CODEC codec) {
         amf::AMFCapsPtr encoderCaps;
         auto ret = AMF_OK;
         {   amf::AMFComponentPtr p_encoder;
-            ret = m_factory->CreateComponent(m_context, codec_rgy_to_enc(codec), &p_encoder);
+            ret = m_factory->CreateComponent(m_context, codec_rgy_to_vceenc(codec), &p_encoder);
             if (ret == AMF_OK) {
                 //HEVCでのAMFComponent::GetCaps()は、AMFComponent::Init()を呼んでおかないと成功しない
                 p_encoder->Init(amf::AMF_SURFACE_NV12, 1280, 720);
@@ -262,7 +262,7 @@ amf::AMFCapsPtr VCEDevice::getEncCaps(RGY_CODEC codec) {
         if (ret == AMF_OK
             && (codec == RGY_CODEC_HEVC || codec == RGY_CODEC_AV1)) {
             amf::AMFComponentPtr p_encoder;
-            if (m_factory->CreateComponent(m_context, codec_rgy_to_enc(codec), &p_encoder) == AMF_OK) {
+            if (m_factory->CreateComponent(m_context, codec_rgy_to_vceenc(codec), &p_encoder) == AMF_OK) {
                 const int dummy_width = 1920;
                 const int dummy_height = 1080;
 
@@ -295,7 +295,7 @@ amf::AMFCapsPtr VCEDevice::getEncCaps(RGY_CODEC codec) {
 
 amf::AMFCapsPtr VCEDevice::getDecCaps(RGY_CODEC codec) {
     if (m_decCaps.count(codec) == 0) {
-        const auto codec_uvd_name = codec_rgy_to_dec(codec);
+        const auto codec_uvd_name = codec_rgy_to_vcedec(codec);
         m_decCaps[codec] = amf::AMFCapsPtr();
         if (codec_uvd_name != nullptr) {
             amf::AMFCapsPtr decodeCaps;
@@ -304,7 +304,7 @@ amf::AMFCapsPtr VCEDevice::getDecCaps(RGY_CODEC codec) {
                 && p_decode->GetCaps(&decodeCaps) == AMF_OK) {
                 // 10bit深度のサポートのチェック
                 decodeCaps->SetProperty(CAP_10BITDEPTH, false);
-                const auto codec_uvd_10bit_name = codec_rgy_to_dec_10bit(codec);
+                const auto codec_uvd_10bit_name = codec_rgy_to_vcedec_10bit(codec);
                 if (codec_uvd_10bit_name != nullptr) {
                     amf::AMFCapsPtr decodeCaps10bit;
                     amf::AMFComponentPtr p_decode10bit;
@@ -329,7 +329,7 @@ std::vector<RGY_CSP> VCEDevice::getIOCspSupport(amf::AMFIOCapsPtr& ioCaps) const
         amf::AMF_SURFACE_FORMAT format = amf::AMF_SURFACE_UNKNOWN;
         amf_bool native = false;
         if (ioCaps->GetFormatAt(ifmt, &format, &native) == AMF_OK && native) {
-            auto csp = csp_enc_to_rgy(format);
+            auto csp = csp_vceenc_to_rgy(format);
             if (csp != RGY_CSP_NA) {
                 csps.push_back(csp);
             }

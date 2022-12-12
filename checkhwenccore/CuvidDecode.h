@@ -30,7 +30,7 @@
 #ifndef __CUVID_DECODE_H__
 #define __CUVID_DECODE_H__
 
-#include <cuda.h>
+#include "cuda_drvapi_dynlink.h"
 #pragma warning(push)
 #pragma warning(disable: 4201)
 #include "dynlink_nvcuvid.h"

@@ -43,7 +43,7 @@ static const auto RGY_CODEC_TO_VCE = make_array<std::pair<RGY_CODEC, const wchar
     std::make_pair(RGY_CODEC_HEVC,    AMFVideoEncoder_HEVC),
     std::make_pair(RGY_CODEC_AV1,     AMFVideoEncoder_AV1)
     );
-MAP_PAIR_0_1(codec, rgy, RGY_CODEC, enc, const wchar_t *, RGY_CODEC_TO_VCE, RGY_CODEC_UNKNOWN, nullptr);
+MAP_PAIR_0_1(codec, rgy, RGY_CODEC, vceenc, const wchar_t *, RGY_CODEC_TO_VCE, RGY_CODEC_UNKNOWN, nullptr);
 
 static const auto VCE_CODEC_UVD_NAME = make_array<std::pair<RGY_CODEC, const wchar_t *>>(
     std::make_pair(RGY_CODEC_H264,  AMFVideoDecoderUVD_H264_AVC ),
@@ -55,9 +55,9 @@ static const auto VCE_CODEC_UVD_NAME = make_array<std::pair<RGY_CODEC, const wch
     std::make_pair(RGY_CODEC_MPEG2, AMFVideoDecoderUVD_MPEG2 )
 );
 
-MAP_PAIR_0_1(codec, rgy, RGY_CODEC, dec, const wchar_t *, VCE_CODEC_UVD_NAME, RGY_CODEC_UNKNOWN, nullptr);
+MAP_PAIR_0_1(codec, rgy, RGY_CODEC, vcedec, const wchar_t *, VCE_CODEC_UVD_NAME, RGY_CODEC_UNKNOWN, nullptr);
 
-const wchar_t * codec_rgy_to_dec_10bit(const RGY_CODEC codec) {
+const wchar_t * codec_rgy_to_vcedec_10bit(const RGY_CODEC codec) {
     switch (codec) {
     case RGY_CODEC_AV1:  return AMFVideoDecoderHW_AV1_12BIT;
     case RGY_CODEC_HEVC: return AMFVideoDecoderHW_H265_MAIN10;
@@ -98,7 +98,7 @@ static const auto RGY_CSP_TO_VCE = make_array<std::pair<RGY_CSP, amf::AMF_SURFAC
     std::make_pair(RGY_CSP_YC48,      amf::AMF_SURFACE_UNKNOWN)
     );
 
-MAP_PAIR_0_1(csp, rgy, RGY_CSP, enc, amf::AMF_SURFACE_FORMAT, RGY_CSP_TO_VCE, RGY_CSP_NA, amf::AMF_SURFACE_UNKNOWN);
+MAP_PAIR_0_1(csp, rgy, RGY_CSP, vceenc, amf::AMF_SURFACE_FORMAT, RGY_CSP_TO_VCE, RGY_CSP_NA, amf::AMF_SURFACE_UNKNOWN);
 
 static const auto RGY_LOGLEVEL_TO_VCE = make_array<std::pair<int, int>>(
     std::make_pair(RGY_LOG_TRACE, AMF_TRACE_TRACE),
@@ -123,14 +123,14 @@ static const auto RGY_PICSTRUCT_TO_VCE = make_array<std::pair<RGY_PICSTRUCT, amf
 MAP_PAIR_0_1(frametype, rgy, RGY_PICSTRUCT, enc, amf::AMF_FRAME_TYPE, RGY_PICSTRUCT_TO_VCE, RGY_PICSTRUCT_UNKNOWN, amf::AMF_FRAME_UNKNOWN);
 
 RGY_NOINLINE
-AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct_rgy_to_enc(RGY_PICSTRUCT picstruct) {
+AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct_rgy_to_vceenc(RGY_PICSTRUCT picstruct) {
     if (picstruct & RGY_PICSTRUCT_TFF) return AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_TOP_FIELD;
     if (picstruct & RGY_PICSTRUCT_BFF) return AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_BOTTOM_FIELD;
     return AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_FRAME;
 }
 
 RGY_NOINLINE
-RGY_PICSTRUCT picstruct_enc_to_rgy(AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct) {
+RGY_PICSTRUCT picstruct_vceenc_to_rgy(AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_ENUM picstruct) {
     if (picstruct == AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_TOP_FIELD) return RGY_PICSTRUCT_FRAME_TFF;
     if (picstruct == AMF_VIDEO_ENCODER_PICTURE_STRUCTURE_BOTTOM_FIELD) return RGY_PICSTRUCT_FRAME_BFF;
     return RGY_PICSTRUCT_FRAME;
@@ -293,7 +293,7 @@ VideoInfo videooutputinfo(
     info.sar[1] = prm.get<AMFRatio>(AMF_PARAM_ASPECT_RATIO(codec)).den;
     adjust_sar(&info.sar[0], &info.sar[1], info.dstWidth, info.dstHeight);
     info.picstruct = picstruct;
-    info.csp = csp_enc_to_rgy(encFormat);
+    info.csp = csp_vceenc_to_rgy(encFormat);
     info.vui = vui;
     return info;
 }

@@ -165,7 +165,7 @@ int _tmain(int argc, TCHAR **argv) {
 #define SSTRING(str) STRING(str)
 #define STRING(str) #str
 
-static const TCHAR *get_encoder_version() {
+const TCHAR *get_encoder_version() {
     return
         _T(ENCODER_NAME) _T(" (")
         BUILD_ARCH_STR _T(") ") VER_STR_FILEVERSION_TCHAR _T(", ")  _T(__DATE__) _T(" ") _T(__TIME__)
@@ -189,6 +189,6 @@ static const TCHAR *get_encoder_version() {
         _T(")");
 }
 
-static void show_version() {
+void show_version() {
     _ftprintf(stdout, _T("%s"), get_encoder_version());
 }

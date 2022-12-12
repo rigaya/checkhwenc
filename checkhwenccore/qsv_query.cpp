@@ -419,7 +419,7 @@ std::vector<RGY_CSP> CheckDecFeaturesInternal(MFXVideoSession& session, mfxVersi
             break;
         }
         
-        videoPrm.mfx.FrameInfo.ChromaFormat = (mfxU16)chromafmt_rgy_to_enc(RGY_CSP_CHROMA_FORMAT[test]);
+        videoPrm.mfx.FrameInfo.ChromaFormat = (mfxU16)chromafmt_rgy_to_qsvenc(RGY_CSP_CHROMA_FORMAT[test]);
         if (codecId == MFX_CODEC_HEVC) {
             if (RGY_CSP_CHROMA_FORMAT[test] == RGY_CHROMAFMT_YUV420) {
                 videoPrm.mfx.CodecProfile = (mfxU16)((RGY_CSP_BIT_DEPTH[test] > 8) ? MFX_PROFILE_HEVC_MAIN10 : MFX_PROFILE_HEVC_MAIN);
@@ -687,7 +687,7 @@ mfxU64 CheckVppFeatures(const QSVDeviceNum deviceNum, std::shared_ptr<RGYLog> lo
 }
 
 uint64_t CheckEncodeFeature(MFXVideoSession& session, const int ratecontrol, const RGY_CODEC codec, const bool lowPower) {
-    const mfxU32 codecId = codec_rgy_to_enc(codec);
+    const mfxU32 codecId = codec_rgy_to_qsvenc(codec);
     mfxVersion mfxVer;
     session.QueryVersion(&mfxVer);
     if (codecId == MFX_CODEC_HEVC && !check_lib_version(mfxVer, MFX_LIB_VERSION_1_15)) {
@@ -1051,7 +1051,7 @@ uint64_t CheckEncodeFeature(MFXVideoSession& session, const int ratecontrol, con
 //API v1.6以降はCheckEncodeFeatureを使うべき
 //同一のAPIバージョンでも環境により異なることが多くなるため
 static uint64_t CheckEncodeFeatureStatic(const mfxVersion mfxVer, const int ratecontrol, const RGY_CODEC codec) {
-    const mfxU32 codecId = codec_rgy_to_enc(codec);
+    const mfxU32 codecId = codec_rgy_to_qsvenc(codec);
     uint64_t feature = 0x00;
     if (codecId != MFX_CODEC_AVC && codecId != MFX_CODEC_MPEG2) {
         return feature;
@@ -1279,7 +1279,7 @@ CodecCsp MakeDecodeFeatureList(MFXVideoSession& session, const vector<RGY_CODEC>
                 RGY_CSP_YUV444, RGY_CSP_YUV444_09, RGY_CSP_YUV444_10, RGY_CSP_YUV444_12, RGY_CSP_YUV444_14, RGY_CSP_YUV444_16
             };
         } else {
-            auto features = CheckDecodeFeature(session, ver, codec_rgy_to_enc(codec));
+            auto features = CheckDecodeFeature(session, ver, codec_rgy_to_qsvenc(codec));
             if (features.size() > 0) {
                 codecFeatures[codec] = features;
             }

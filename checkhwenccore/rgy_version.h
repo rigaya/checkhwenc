@@ -123,6 +123,8 @@ const char *get_encoder_version();
 #else //#if defined(WIN32) || defined(WIN64)
 #define ENABLE_D3D9  0
 #define ENABLE_D3D11 0
+#define ENABLE_VULKAN 1
+#define VULKAN_DEFAULT_DEVICE_ONLY 1
 #define USE_ONEVPL 1
 #define D3D_SURFACES_SUPPORT 0
 #define MFX_D3D11_SUPPORT 0
@@ -132,8 +134,8 @@ const char *get_encoder_version();
 #define ENABLE_CAPTION2ASS 0
 #define ENABLE_HYPER_MODE 0
 #include "rgy_config.h"
-#define ENCODER_NAME              "QSVEncC"
-#define DECODER_NAME              "qsv"
+#define ENCODER_NAME              "checkhwenc"
+#define DECODER_NAME              "checkhwenc"
 #endif // #if defined(WIN32) || defined(WIN64)
 
 #endif //__RGY_VERSION_H__

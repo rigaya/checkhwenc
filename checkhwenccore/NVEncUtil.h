@@ -47,6 +47,7 @@
 #include "rgy_def.h"
 #pragma warning (push)
 #pragma warning (disable: 4819)
+#include <cuda_runtime.h>
 RGY_DISABLE_WARNING_PUSH
 RGY_DISABLE_WARNING_STR("-Wswitch")
 #include "helper_cuda.h"

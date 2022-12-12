@@ -234,7 +234,7 @@ static const char *_cudaGetErrorEnum(cudaError_t error)
 }
 #endif
 
-#ifdef __cuda_cuda_h__
+#if defined(__cuda_cuda_h__) || defined(__cuda_drvapi_dynlink_cuda_h__)
 // CUDA Driver API errors
 static const char *_cudaGetErrorEnum(CUresult error)
 {

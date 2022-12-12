@@ -1,0 +1,6 @@
+Package: $PACKAGE_NAME$
+Version: $PACKAGE_VERSION$
+Architecture: $PACKAGE_ARCH$
+Maintainer: $PACKAGE_MAINTAINER$
+Depends: $PACKAGE_DEPENDS$
+Description: $PACKAGE_DESCRIPTION$

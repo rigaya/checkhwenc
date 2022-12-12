@@ -42,7 +42,7 @@
 #pragma warning (push)
 #pragma warning (disable: 4819) //C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
 #include "nvEncodeAPI.h"
-#include "cuda.h"
+#include "cuda_drvapi_dynlink.h"
 #include "cuda_runtime.h"
 #pragma warning(pop)
 #endif

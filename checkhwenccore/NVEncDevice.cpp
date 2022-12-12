@@ -1046,7 +1046,7 @@ RGY_ERR NVGPUInfo::initDevice(int deviceID, CUctx_flags ctxFlags, bool error_if_
         return RGY_ERR_CUDA;
     }
     writeLog(RGY_LOG_DEBUG, _T("cuCtxPopCurrent: Success.\n"));
-    m_cuCtx = std::unique_ptr<std::remove_pointer<CUcontext>::type, decltype(&cuCtxDestroy)>(cuCtxTemp, cuCtxDestroy);
+    m_cuCtx = std::unique_ptr<std::remove_pointer<CUcontext>::type, decltype(cuCtxDestroy)>(cuCtxTemp, cuCtxDestroy);
 
     CUvideoctxlock vidCtxLockTmp;
     if (CUDA_SUCCESS != (cuResult = cuvidCtxLockCreate(&vidCtxLockTmp, m_cuCtx.get()))) {
@@ -1220,7 +1220,7 @@ NVENCSTATUS NVEncCtrl::InitCuda() {
     cudaerr = cudaGetLastError();
 
     CUresult cuResult;
-    if (CUDA_SUCCESS != (cuResult = cuInit(0))) {
+    if (CUDA_SUCCESS != (cuResult = cuInit(0, 9000))) {
         PrintMes(RGY_LOG_ERROR, _T("cuInit error:0x%x (%s)\n"), cuResult, char_to_tstring(_cudaGetErrorEnum(cuResult)).c_str());
         return NV_ENC_ERR_NO_ENCODE_DEVICE;
     }

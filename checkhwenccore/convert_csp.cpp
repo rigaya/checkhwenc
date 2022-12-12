@@ -1611,7 +1611,7 @@ static void convert_yv12_to_p010(void **dst, const void **src, int width, int sr
 #define NONE  (RGY_SIMD::NONE)
 
 static const ConvertCSP funcList[] = {
-#if !FOR_AUO
+#if !(FOR_AUO || CHECKHWENC)
     FUNC_AVX2( RGY_CSP_NV12,      RGY_CSP_NV12,      false,  copy_nv12_to_nv12_avx2,              copy_nv12_to_nv12_avx2,              AVX2|AVX)
     FUNC_SSE(  RGY_CSP_NV12,      RGY_CSP_NV12,      false,  copy_nv12_to_nv12_sse2,              copy_nv12_to_nv12_sse2,              SSE2 )
     FUNC__C_(  RGY_CSP_NV12,      RGY_CSP_NV12,      false,  copy_nv12_to_nv12_c,                 copy_nv12_to_nv12_c,                 NONE )
@@ -1619,7 +1619,7 @@ static const ConvertCSP funcList[] = {
     FUNC_SSE(  RGY_CSP_P010,      RGY_CSP_P010,      false,  copy_p010_to_p010_sse2,              copy_p010_to_p010_sse2,              SSE2 )
     FUNC__C_(  RGY_CSP_P010,      RGY_CSP_P010,      false,  copy_p010_to_p010_c,                 copy_p010_to_p010_c,                 NONE)
 #endif
-#if !CLFILTERS_AUF
+#if !(CLFILTERS_AUF || CHECKHWENC)
     FUNC_AVX2( RGY_CSP_YUY2,      RGY_CSP_NV12,      false,  convert_yuy2_to_nv12_avx2,           convert_yuy2_to_nv12_i_avx2,         AVX2|AVX)
     FUNC_AVX(  RGY_CSP_YUY2,      RGY_CSP_NV12,      false,  convert_yuy2_to_nv12_avx,            convert_yuy2_to_nv12_i_avx,          AVX )
     FUNC_SSE(  RGY_CSP_YUY2,      RGY_CSP_NV12,      false,  convert_yuy2_to_nv12_sse2,           convert_yuy2_to_nv12_i_ssse3,        SSSE3|SSE2 )
@@ -1866,6 +1866,9 @@ static const ConvertCSP funcList[] = {
     FUNC_AVX2( RGY_CSP_YUV444_09, RGY_CSP_YUV444,    false, convert_yuv444_09_to_yuv444_avx2,    convert_yuv444_09_to_yuv444_avx2, AVX2|AVX )
     FUNC_SSE(  RGY_CSP_YUV444_09, RGY_CSP_YUV444,    false, convert_yuv444_09_to_yuv444_sse2,    convert_yuv444_09_to_yuv444_sse2, SSE2 )
     FUNC__C_(  RGY_CSP_YUV444_09, RGY_CSP_YUV444,    false, convert_yuv444_09_to_yuv444_c,       convert_yuv444_09_to_yuv444_c,    NONE )
+#endif
+#if CHECKHWENC
+    { RGY_CSP_NA, RGY_CSP_NA, false, { nullptr, nullptr }, NONE } // dummy
 #endif
 };
 

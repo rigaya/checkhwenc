@@ -47,7 +47,7 @@ static const auto RGY_CODEC_TO_MFX = make_array<std::pair<RGY_CODEC, mfxU32>>(
     std::make_pair(RGY_CODEC_VC1,   MFX_CODEC_VC1)
 );
 
-MAP_PAIR_0_1(codec, rgy, RGY_CODEC, enc, mfxU32, RGY_CODEC_TO_MFX, RGY_CODEC_UNKNOWN, 0u);
+MAP_PAIR_0_1(codec, rgy, RGY_CODEC, qsvenc, mfxU32, RGY_CODEC_TO_MFX, RGY_CODEC_UNKNOWN, 0u);
 
 static const auto RGY_CHROMAFMT_TO_MFX = make_array<std::pair<RGY_CHROMAFMT, mfxU32>>(
     std::make_pair(RGY_CHROMAFMT_MONOCHROME, MFX_CHROMAFORMAT_MONOCHROME),
@@ -57,7 +57,7 @@ static const auto RGY_CHROMAFMT_TO_MFX = make_array<std::pair<RGY_CHROMAFMT, mfx
     std::make_pair(RGY_CHROMAFMT_YUVA444,    MFX_CHROMAFORMAT_YUV444)
     );
 
-MAP_PAIR_0_1(chromafmt, rgy, RGY_CHROMAFMT, enc, mfxU32, RGY_CHROMAFMT_TO_MFX, RGY_CHROMAFMT_UNKNOWN, 0u);
+MAP_PAIR_0_1(chromafmt, rgy, RGY_CHROMAFMT, qsvenc, mfxU32, RGY_CHROMAFMT_TO_MFX, RGY_CHROMAFMT_UNKNOWN, 0u);
 
 static const auto RGY_CSP_TO_MFX = make_array<std::pair<RGY_CSP, mfxU32>>(
     std::make_pair(RGY_CSP_NA,        0),
@@ -93,7 +93,7 @@ static const auto RGY_CSP_TO_MFX = make_array<std::pair<RGY_CSP, mfxU32>>(
     std::make_pair(RGY_CSP_YC48,      0)
     );
 
-MAP_PAIR_0_1(csp, rgy, RGY_CSP, enc, mfxU32, RGY_CSP_TO_MFX, RGY_CSP_NA, 0);
+MAP_PAIR_0_1(csp, rgy, RGY_CSP, qsvenc, mfxU32, RGY_CSP_TO_MFX, RGY_CSP_NA, 0);
 
 static const auto RGY_RESIZE_ALGO_TO_MFX = make_array<std::pair<RGY_VPP_RESIZE_ALGO, int>>(
     std::make_pair(RGY_VPP_RESIZE_AUTO,                 MFX_INTERPOLATION_DEFAULT),
@@ -114,14 +114,14 @@ static const auto RGY_SCALING_MODE_TO_MFX = make_array<std::pair<RGY_VPP_RESIZE_
 MAP_PAIR_0_1(resize_mode, rgy, RGY_VPP_RESIZE_MODE, enc, int, RGY_SCALING_MODE_TO_MFX, RGY_VPP_RESIZE_MODE_UNKNOWN, -1);
 
 RGY_NOINLINE
-mfxU16 picstruct_rgy_to_enc(RGY_PICSTRUCT picstruct) {
+mfxU16 picstruct_rgy_to_qsvenc(RGY_PICSTRUCT picstruct) {
     if (picstruct & RGY_PICSTRUCT_TFF) return (mfxU16)MFX_PICSTRUCT_FIELD_TFF;
     if (picstruct & RGY_PICSTRUCT_BFF) return (mfxU16)MFX_PICSTRUCT_FIELD_BFF;
     return (mfxU16)MFX_PICSTRUCT_PROGRESSIVE;
 }
 
 RGY_NOINLINE
-RGY_PICSTRUCT picstruct_enc_to_rgy(mfxU16 picstruct) {
+RGY_PICSTRUCT picstruct_qsvenc_to_rgy(mfxU16 picstruct) {
     if (picstruct & MFX_PICSTRUCT_FIELD_TFF) return RGY_PICSTRUCT_FRAME_TFF;
     if (picstruct & MFX_PICSTRUCT_FIELD_BFF) return RGY_PICSTRUCT_FRAME_BFF;
     return RGY_PICSTRUCT_FRAME;
@@ -130,8 +130,8 @@ RGY_PICSTRUCT picstruct_enc_to_rgy(mfxU16 picstruct) {
 RGY_NOINLINE
 mfxFrameInfo frameinfo_rgy_to_enc(VideoInfo info) {
     mfxFrameInfo mfx = { 0 };
-    mfx.FourCC = csp_rgy_to_enc(info.csp);
-    mfx.ChromaFormat = (mfxU16)chromafmt_rgy_to_enc(RGY_CSP_CHROMA_FORMAT[info.csp]);
+    mfx.FourCC = csp_rgy_to_qsvenc(info.csp);
+    mfx.ChromaFormat = (mfxU16)chromafmt_rgy_to_qsvenc(RGY_CSP_CHROMA_FORMAT[info.csp]);
     mfx.BitDepthLuma = (mfxU16)(info.bitdepth > 8 ? info.bitdepth : 0);
     mfx.BitDepthChroma = (mfxU16)(info.bitdepth > 8 ? info.bitdepth : 0);
     mfx.Shift = (fourccShiftUsed(mfx.FourCC) && RGY_CSP_BIT_DEPTH[info.csp] - info.bitdepth > 0) ? 1 : 0;
@@ -145,15 +145,15 @@ mfxFrameInfo frameinfo_rgy_to_enc(VideoInfo info) {
     mfx.FrameRateExtD = info.fpsD;
     mfx.AspectRatioW = (mfxU16)info.sar[0];
     mfx.AspectRatioH = (mfxU16)info.sar[1];
-    mfx.PicStruct = picstruct_rgy_to_enc(info.picstruct);
+    mfx.PicStruct = picstruct_rgy_to_qsvenc(info.picstruct);
     return mfx;
 }
 
 RGY_NOINLINE
 mfxFrameInfo frameinfo_rgy_to_enc(const RGYFrameInfo& info, const rgy_rational<int> fps, const rgy_rational<int> sar, const int blockSize) {
     mfxFrameInfo mfx = { 0 };
-    mfx.FourCC = csp_rgy_to_enc(info.csp);
-    mfx.ChromaFormat = (mfxU16)chromafmt_rgy_to_enc(RGY_CSP_CHROMA_FORMAT[info.csp]);
+    mfx.FourCC = csp_rgy_to_qsvenc(info.csp);
+    mfx.ChromaFormat = (mfxU16)chromafmt_rgy_to_qsvenc(RGY_CSP_CHROMA_FORMAT[info.csp]);
     mfx.BitDepthLuma = (mfxU16)(info.bitdepth > 8 ? info.bitdepth : 0);
     mfx.BitDepthChroma = (mfxU16)(info.bitdepth > 8 ? info.bitdepth : 0);
     mfx.Shift = (fourccShiftUsed(mfx.FourCC) && RGY_CSP_BIT_DEPTH[info.csp] - info.bitdepth > 0) ? 1 : 0;
@@ -167,14 +167,14 @@ mfxFrameInfo frameinfo_rgy_to_enc(const RGYFrameInfo& info, const rgy_rational<i
     mfx.FrameRateExtD = fps.d();
     mfx.AspectRatioW = (mfxU16)sar.n();
     mfx.AspectRatioH = (mfxU16)sar.d();
-    mfx.PicStruct = picstruct_rgy_to_enc(info.picstruct);
+    mfx.PicStruct = picstruct_rgy_to_qsvenc(info.picstruct);
     return mfx;
 }
 
 RGY_NOINLINE
 VideoInfo videooutputinfo(const mfxInfoMFX& mfx, const mfxExtVideoSignalInfo& vui, const mfxExtChromaLocInfo& chromaloc) {
     VideoInfo info;
-    info.codec = codec_enc_to_rgy(mfx.CodecId);
+    info.codec = codec_qsvenc_to_rgy(mfx.CodecId);
     info.codecLevel = mfx.CodecLevel;
     info.codecProfile = mfx.CodecProfile;
     if (info.codec == RGY_CODEC_AV1) {
@@ -195,9 +195,9 @@ VideoInfo videooutputinfo(const mfxInfoMFX& mfx, const mfxExtVideoSignalInfo& vu
     info.vui.colorrange = vui.VideoFullRange ? RGY_COLORRANGE_FULL : RGY_COLORRANGE_UNSPECIFIED;
     info.vui.format = vui.VideoFormat;
     info.vui.chromaloc = (chromaloc.ChromaLocInfoPresentFlag && chromaloc.ChromaSampleLocTypeTopField) ? (CspChromaloc)(chromaloc.ChromaSampleLocTypeTopField+1) : RGY_CHROMALOC_UNSPECIFIED;
-    info.picstruct = picstruct_enc_to_rgy(mfx.FrameInfo.PicStruct);
+    info.picstruct = picstruct_qsvenc_to_rgy(mfx.FrameInfo.PicStruct);
     info.bitdepth = (mfx.FrameInfo.BitDepthLuma == 0) ? 8 : mfx.FrameInfo.BitDepthLuma;
-    info.csp = csp_enc_to_rgy(mfx.FrameInfo.FourCC);
+    info.csp = csp_qsvenc_to_rgy(mfx.FrameInfo.FourCC);
     return info;
 }
 
@@ -211,9 +211,9 @@ VideoInfo videooutputinfo(const mfxFrameInfo& frameinfo) {
     info.fpsD = frameinfo.FrameRateExtD;
     info.sar[0] = frameinfo.AspectRatioW;
     info.sar[1] = frameinfo.AspectRatioH;
-    info.picstruct = picstruct_enc_to_rgy(frameinfo.PicStruct);
+    info.picstruct = picstruct_qsvenc_to_rgy(frameinfo.PicStruct);
     info.bitdepth = (frameinfo.BitDepthLuma == 0) ? 8 : frameinfo.BitDepthLuma;
-    info.csp = csp_enc_to_rgy(frameinfo.FourCC);
+    info.csp = csp_qsvenc_to_rgy(frameinfo.FourCC);
     return info;
 }
 

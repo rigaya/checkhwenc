@@ -1,0 +1,570 @@
+#!/bin/bash
+
+#-----------------------------------------------------------------------------------------
+#    QSVEnc/NVEnc/VCEEnc by rigaya
+#  -----------------------------------------------------------------------------------------
+#   ソースコードについて
+#   ・無保証です。
+#   ・本ソースコードを使用したことによるいかなる損害・トラブルについてrigayaは責任を負いません。
+#   以上に了解して頂ける場合、本ソースコードの使用、複製、改変、再頒布を行って頂いて構いません。
+#  -----------------------------------------------------------------------------------------
+
+CNF_LOG=config.log
+
+cnf_write()
+{
+    echo "$*"
+    echo "$*" >> ${CNF_LOG}
+}
+cnf_print()
+{
+    printf "$*"
+    echo "$*" >> ${CNF_LOG}
+}
+
+write_config_mak()
+{
+    cnf_write $1
+    echo $1 >> config.mak
+}
+
+write_enc_config()
+{
+    cnf_write $1
+    echo $1 >> checkhwenccore/rgy_config.h
+}
+
+write_app_rev()
+{
+    cnf_write $1
+    echo $1 >> checkhwenccore/rgy_rev.h
+}
+
+cxx_check()
+{
+    echo "" >> ${CNF_LOG}
+    if [ -n "$1" ]; then
+        printf "checking for $1..."
+        echo "### - checking for $1... --------------" >> ${CNF_LOG}
+    else 
+        echo "### - test start --------------" >> ${CNF_LOG}
+    fi
+    echo "#include <iostream>" > cxx_check.c
+    if [ -n "$3" ]; then
+        echo "#include <$3>" >> cxx_check.c
+    fi 
+    if [ -n "$4" ]; then
+        echo "extern \"C\" {" >> cxx_check.c
+        echo "#include <$4>" >> cxx_check.c
+        echo "}" >> cxx_check.c
+    fi 
+    echo "int main(void){ $5; std::cout << \"Hello World!\" << std::endl; return 0;}" >> cxx_check.c
+    CXX_CMD="$CXX -w cxx_check.c $2 -o cxx_check"
+    echo "------ command ------------" >> ${CNF_LOG}
+    echo ${CXX_CMD} >> ${CNF_LOG}
+    echo "------ test ---------------" >> ${CNF_LOG}
+    cat cxx_check.c >> ${CNF_LOG}
+    echo "---------------------------" >> ${CNF_LOG}
+    $CXX_CMD 2>> ${CNF_LOG}
+    #$CXX cxx_check.c $1 -o cxx_check
+    ret=$?
+    rm -f cxx_check*
+    echo "### - test fin -> ${ret} ----------" >> ${CNF_LOG}
+    return $ret
+}
+
+regex_check()
+{
+    echo "#include <iostream>" > cxx_check.c
+    echo "#include <string>" >> cxx_check.c
+    echo "#include <regex>" >> cxx_check.c
+    echo "int main(void){ try { std::regex re(R\"(\d+)\"); std::string test(\"1234\"); return std::regex_match(test, re) ? 0 : 1; } catch (...) { return 1; } }" >> cxx_check.c
+    $CXX cxx_check.c $1 -o cxx_check 2>/dev/null
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        rm -f cxx_check*
+        return $ret
+    fi
+    ./cxx_check 2>/dev/null
+    ret=$?
+    rm -f cxx_check*
+    return $ret
+}
+
+rm -f config.* .depend checkhwenccore/rgy_config.h checkhwenccore/rgy_rev.h
+
+PKGCONFIG=${PKGCONFIG:-pkg-config}
+USE_PKGCONFIG=1
+
+ENABLE_DEBUG=0
+CC=${CC:-gcc}
+CXX=${CXX:-g++}
+PROGRAM=checkhwenc
+PREFIX=${PREFIX:-/usr/local}
+EXTRACXXFLAGS=""
+EXTRALDFLAGS=""
+SRCS=""
+X86_64=1
+ARM64=0
+OBJCOPY_ARCH_ELF=
+OBJCOPY_ARCH_BIN=
+NO_RDTSCP_INTRIN=0
+
+LIBVA_SUPPORT=1
+LIBVA_X11_SUPPORT=1
+LIBVA_DRM_SUPPORT=1
+
+CUDA_PATH=${CUDA_PATH:-/usr/local/cuda}
+
+ENABLE_CPP_REGEX=1
+
+print_help()
+{
+cat << EOF
+Usage: ./configure [options]
+
+options:
+  -h, --help               print this message
+
+  --prefix=PREFIX          install checkhwenc into PREFIX/bin [${PREFIX}]
+
+  --cc=CC                  set C compiler path [${CC}]
+  --cxx=CXX                set C++ compiler path [${CXX}]
+  --pkg-config=PKGCONFIG   set pkg-config path [${PKGCONFIG}]
+  --cuda-path=CUDA_PATH    set cuda path [${CUDA_PATH}]
+  --enable-debug           compile in debug configuration [${ENABLE_DEBUG}]
+
+  --extra-cxxflags=XCFLAGS add XCFLAGS to CFLAGS
+  --extra-ldflags=XLDFLAGS add XLDFLAGS to LDFLAGS
+EOF
+}
+
+SRCDIR=$(dirname "$0")
+if [ "${SRCDIR}" == "`pwd`" ]; then
+    SRCDIR=.
+fi
+
+for opt; do
+    optarg="${opt#*=}"
+    case "$opt" in
+         -h)
+            print_help
+            exit 0
+            ;;
+         --help)
+            print_help
+            exit 0
+            ;;
+        --prefix=*)
+            PREFIX="$optarg"
+            ;;
+        --cc=*)
+            CC="$optarg"
+            ;;
+        --cxx=*)
+            CXX="$optarg"
+            ;;
+        --extra-cxxflags=*)
+            EXTRACXXFLAGS="$optarg"
+            ;;
+        --extra-ldflags=*)
+            EXTRALDFLAGS="$optarg"
+            ;;
+        --cuda-path=*)
+            CUDA_PATH="$optarg"
+            ;;
+        --enable-debug)
+            ENABLE_DEBUG=1
+            ;;
+        --pkg-config=*)
+            PKGCONFIG="$optarg"
+            ;;
+        *)
+            cnf_write "unknown option $opt"
+            exit 1
+            ;;
+    esac
+done
+
+## log
+echo "" > ${CNF_LOG}
+echo "CNF_LOG=${CNF_LOG}" >> ${CNF_LOG}
+echo "PKGCONFIG=${PKGCONFIG}" >> ${CNF_LOG}
+echo "USE_PKGCONFIG=${USE_PKGCONFIG}" >> ${CNF_LOG}
+echo "ENABLE_DEBUG=${ENABLE_DEBUG}" >> ${CNF_LOG}
+echo "CC=${CC}" >> ${CNF_LOG}
+echo "CXX=${CXX}" >> ${CNF_LOG}
+echo "PROGRAM=${PROGRAM}" >> ${CNF_LOG}
+echo "PREFIX=${PREFIX}" >> ${CNF_LOG}
+echo "EXTRACXXFLAGS=${EXTRACXXFLAGS}" >> ${CNF_LOG}
+echo "EXTRALDFLAGS=${EXTRALDFLAGS}" >> ${CNF_LOG}
+echo "CUDA_PATH=${CUDA_PATH}" >> ${CNF_LOG}
+echo "ENABLE_CPP_REGEX=${ENABLE_CPP_REGEX}" >> ${CNF_LOG}
+
+cnf_print "checking for ${CXX}..."
+if ! cxx_check "${CXX}" "" ; then
+    cnf_write "${CXX} does not work"
+    exit 1
+fi
+cnf_write "OK"
+
+if [ `echo | ${CXX} -E -dM - | egrep "WIN32|WIN64" | wc --lines` -ne 0 ]; then
+    cnf_write "This script does not support Windows platform."
+    cnf_write "For Windows, use Visual Studio."
+    exit 1 
+fi
+
+if [ `echo | ${CXX} -E -dM - | grep "x86_64" | wc --lines` -ne 0 ]; then
+    ARM64=0
+    X86_64=1
+    OBJCOPY_ARCH_ELF="elf64-x86-64"
+    OBJCOPY_ARCH_BIN="i386"
+else
+    cnf_write "Unknown architecture!"
+    exit 1
+fi
+
+CXXINC=" \
+  -DLINUX -DUNIX -D_FILE_OFFSET_BITS=64 -D__USE_LARGEFILE64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS \
+  -I${SRCDIR} -I${SRCDIR}/checkhwenccore -I${SRCDIR}/ttmath \
+  -I${SRCDIR}/OpenCL-Headers \
+  -I${SRCDIR}/NVEncSDK/Common/inc \
+  -I${SRCDIR}/AMF/amf/public/include -I${SRCDIR}/AMF/amf/public/include/core -I${SRCDIR}/AMF/amf/public/include/components \
+"
+CXXFLAGS="-Wall -Wno-unknown-pragmas -Wno-unused -Wno-missing-braces"
+
+LDFLAGS="-L. -static-libstdc++ -ldl"
+if [ $ARM64 -ne 0 ]; then
+    CXXINC="${CXXINC} -DLINUX64"
+elif [ $X86_64 -ne 0 ]; then
+    CXXINC="${CXXINC} -DLINUX64 -m64"
+    LDFLAGS="${LDFLAGS} -m64"
+else
+    CXXINC="${CXXINC} -DLINUX32 -m32"
+    LDFLAGS="${LDFLAGS} -m32"
+fi
+
+for file in "${CXX}"; do
+if [ ! `type -p $file 2> /dev/null` ]; then
+        cnf_write "$file not found"
+        exit 1
+    fi
+done
+
+if cxx_check "pthread" "${CXXFLAGS} ${LDFLAGS} -pthread" ; then
+    CXXFLAGS="${CXXFLAGS} -pthread"
+    LDFLAGS="${LDFLAGS} -pthread"
+else
+    cnf_write "pthread not installed." 
+    exit 1
+fi
+cnf_write "OK"
+
+CUDA_CFLAGS="-I${CUDA_PATH}/include"
+CUDA_LIBS="-L${CUDA_PATH}/lib64 -lcudart_static -lrt -ldl"
+if ! cxx_check "cuda" "${CXXFLAGS} ${CXXINC} ${CUDA_CFLAGS} ${LDFLAGS} ${CUDA_LIBS}" "cuda_runtime.h" "" "auto result = cudaMallocHost(0,0,0);" ; then
+    cnf_write "cuda not found in CUDA_PATH=${CUDA_PATH}." 
+    tail -n 100 ${CNF_LOG}
+    exit 1
+fi
+cnf_write "OK"
+
+if cxx_check "c++17" "${CXXFLAGS} -std=c++17 ${LDFLAGS}" ; then
+    cnf_write "OK"
+else
+    cnf_write "${CXX} does not work with -std=c++17"
+    exit 1
+fi
+
+if [ $X86_64 -ne 0 ]; then
+    if cxx_check "-msse2" "${CXXFLAGS} -msse2 ${LDFLAGS}" ; then
+        CXXFLAGS="$CXXFLAGS -msse2"
+    else
+        cnf_write "SSE2 not supported with this compiler." 
+        exit 1
+    fi
+    cnf_write "OK"
+
+    if ! cxx_check "__rdtscp()" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LDFLAGS}" "" "x86intrin.h" "unsigned int a = 0; auto i = __rdtscp(&a);" ; then
+        CXXFLAGS="${CXXFLAGS} -DNO_RDTSCP_INTRIN=1"
+        cnf_write "no"
+    else
+        cnf_write "yes"
+    fi
+fi
+
+if cxx_check "-fPIE" "${CXXFLAGS} -fPIE ${LDFLAGS}" ; then
+    CXXFLAGS="$CXXFLAGS -fPIE"
+fi
+
+if [ ! $ENABLE_DEBUG -eq 0 ]; then
+    cnf_write "configuring for debug..."
+    CXXFLAGS="${CXXFLAGS} -O0 -g -D_DEBUG"
+else
+    cnf_write "configuring for speed..."
+    CXXFLAGS="${CXXFLAGS} -O3 -DNDEBUG=1"
+    if cxx_check "-mfpmath=sse" "${CXXFLAGS} -mfpmath=sse ${LDFLAGS}" ; then
+        CXXFLAGS="$CXXFLAGS -mfpmath=sse"
+        cnf_write "yes"
+    else
+        cnf_write "no"
+    fi
+    if cxx_check "-ffast-math" "${CXXFLAGS} -ffast-math ${LDFLAGS}" ; then
+        CXXFLAGS="$CXXFLAGS -ffast-math"
+        cnf_write "yes"
+    else
+        cnf_write "no"
+    fi
+    if cxx_check "-fomit-frame-pointer" "${CXXFLAGS} -fomit-frame-pointer ${LDFLAGS}" ; then
+        CXXFLAGS="$CXXFLAGS -fomit-frame-pointer"
+        cnf_write "yes"
+    else
+        cnf_write "no"
+    fi
+    #LDFLAGS="$LDFLAGS -Wl,-s"
+fi
+
+if [ -n "$EXTRACXXFLAGS" ]; then
+    if ! cxx_check "--extra-cxxflags" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LDFLAGS}" ; then
+        cnf_write "--extra-cxxflags=${EXTRACXXFLAGS} does not work"
+        exit 1
+    fi
+    cnf_write "OK"
+fi
+
+if [ -n "$EXTRALDFLAGS" ]; then
+    if ! cxx_check "--extra-ldflags" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LDFLAGS} ${EXTRALDFLAGS}" ; then
+        cnf_write "--extra-ldflags=${EXTRALDFLAGS} does not work"
+        exit 1
+    fi
+    cnf_write "OK"
+fi
+
+cnf_print "checking for pkg-config..."
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$PREFIX/lib/pkgconfig
+type -p $PKGCONFIG 2>/dev/null 1>/dev/null
+if [ $? -ne 0 ]; then
+    cnf_write "${PKGCONFIG} does not exist."
+    USE_PKGCONFIG=0
+fi
+cnf_write "OK"
+
+OPENCL_CXXFLAGS=
+if [ "${OPENCL_HEADERS}" != "" ]; then
+    OPENCL_CXXFLAGS=-I${OPENCL_HEADERS}
+fi
+if cxx_check "opencl-headers" "${CXXFLAGS} ${OPENCL_CXXFLAGS}" "" "CL/opencl.h" "cl_int test = 0;" ; then
+    CXXFLAGS="${CXXFLAGS} ${OPENCL_CXXFLAGS}"
+    cnf_write "yes"
+else
+    cnf_write "OpenCL headers not installed." 
+    exit 1
+fi
+
+VULKAN_CXXFLAGS=
+if [ "${VULKAN_HEADERS}" != "" ]; then
+    VULKAN_CXXFLAGS=-I${VULKAN_HEADERS}
+fi
+if cxx_check "vulkan-headers" "${CXXFLAGS} ${VULKAN_CXXFLAGS}" "" "vulkan/vulkan.h" "VkBool32 test = 0;" ; then
+    CXXFLAGS="${CXXFLAGS} ${VULKAN_CXXFLAGS}"
+    cnf_write "yes"
+else
+    cnf_write "vulkan headers not installed." 
+    exit 1
+fi
+
+LIBVA_DRM_LIBS="-lva-drm -lva"
+LIBVA_DRM_CFLAGS=
+LIBVA_DRM_SUPPORT=0
+if ! ${PKGCONFIG} --exists libva-drm ; then
+    cnf_write "libva-drm could not be detected by ${PKGCONFIG}. [ PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ]"
+else
+    LIBVA_DRM_LIBS=`${PKGCONFIG} --libs libva-drm`
+    LIBVA_DRM_CFLAGS=`${PKGCONFIG} --cflags libva-drm`
+fi
+if cxx_check "libva-drm" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LIBVA_DRM_CFLAGS} ${LDFLAGS} ${EXTRALDFLAGS} ${LIBVA_DRM_LIBS}" "va/va_drm.h" "" "vaGetDisplayDRM(0);" ; then
+    LDFLAGS="${LDFLAGS} ${LIBVA_DRM_LIBS}"
+    CXXFLAGS="${CXXFLAGS} ${LIBVA_DRM_CFLAGS} -DLIBVA_DRM_SUPPORT"
+    LIBVA_DRM_SUPPORT=1
+    cnf_write "yes"
+else
+    cnf_write "no"
+fi
+
+LIBVA_X11_LIBS="-lva-x11 -lva"
+LIBVA_X11_CFLAGS=
+LIBVA_X11_SUPPORT=0
+if ! ${PKGCONFIG} --exists libva-x11 ; then
+    cnf_write "libva-x11 could not be detected by ${PKGCONFIG}. [ PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ]"
+else
+    LIBVA_X11_LIBS=`${PKGCONFIG} --libs libva-x11`
+    LIBVA_X11_CFLAGS=`${PKGCONFIG} --cflags libva-x11`
+fi
+if cxx_check "libva_x11" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LIBVA_X11_CFLAGS} ${LDFLAGS} ${EXTRALDFLAGS} ${LIBVA_X11_LIBS}" "va/va_x11.h" "" "vaGetDisplay(0);" ; then
+    LDFLAGS="${LDFLAGS} ${LIBVA_X11_LIBS}"
+    CXXFLAGS="${CXXFLAGS} ${LIBVA_X11_CFLAGS} -DLIBVA_X11_SUPPORT"
+    LIBVA_X11_SUPPORT=1
+    cnf_write "yes"
+else
+    cnf_write "no"
+fi
+
+LIBVA_SUPPORT=0
+if [ $LIBVA_DRM_SUPPORT -ne 0 -o $LIBVA_X11_SUPPORT -ne 0 ]; then
+    LIBVA_SUPPORT=1
+    CXXFLAGS="${CXXFLAGS} -DLIBVA_SUPPORT"
+    cnf_write "checking for libva... yes"
+else
+    if ! ${PKGCONFIG} --exists libva ; then
+        cnf_write "libva could not be detected by ${PKGCONFIG}. [ PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ]"
+    else
+        LIBVA_LIBS=`${PKGCONFIG} --libs libva`
+        LIBVA_CFLAGS=`${PKGCONFIG} --cflags libva`
+    fi
+    if cxx_check "libva" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LIBVA_CFLAGS} ${LDFLAGS} ${EXTRALDFLAGS} ${LIBVA_LIBS}" "va/va.h" "" "vaDestroyBuffer(0,0);" ; then
+        LDFLAGS="${LDFLAGS} ${LIBVA_LIBS}"
+        CXXFLAGS="${CXXFLAGS} ${LIBVA_CFLAGS} -DLIBVA_SUPPORT"
+        LIBVA_SUPPORT=1
+        cnf_write "yes"
+    else
+        cnf_write "libva not installed." 
+        exit 1
+    fi
+fi
+
+LIBDRM_LIBS="-ldrm"
+LIBDRM_CFLAGS=
+LIBDRM_SUPPORT=0
+if ! ${PKGCONFIG} --exists libdrm ; then
+    cnf_write "libva-x11 could not be detected by ${PKGCONFIG}. [ PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ]"
+else
+    LIBDRM_LIBS=`${PKGCONFIG} --libs libdrm`
+    LIBDRM_CFLAGS=`${PKGCONFIG} --cflags libdrm`
+fi
+if cxx_check "drm" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LIBDRM_CFLAGS} ${LDFLAGS} ${EXTRALDFLAGS} ${LIBDRM_LIBS}" "xf86drm.h" "" "drmOpen(0,0);" ; then
+    LDFLAGS="${LDFLAGS} ${LIBDRM_LIBS}"
+    CXXFLAGS="${CXXFLAGS} ${LIBDRM_CFLAGS}"
+    LIBDRM_SUPPORT=1
+    cnf_write "yes"
+else
+    cnf_write "no"
+fi
+
+if [ ! -e ./buildVPL/lib/libvpl.a ]; then
+    if [ ! `type -p cmake 2> /dev/null` ]; then
+        cnf_write "cmake not found which is required to build vpl!"
+        exit 1
+    fi
+fi
+
+VPL_CFLAGS="-Os"
+if [ $ENABLE_DEBUG -eq 0 ] && [ $ENABLE_LTO -ne 0 ]; then
+	VPL_CFLAGS="${VPL_CFLAGS} -flto"
+fi
+
+./build_vpl.sh "${VPL_CFLAGS}"
+
+LIBVPL_LIBS=""
+if [ -e ./buildVPL/lib/libvpl.a ]; then
+    LIBVPL_LIBS="-L./buildVPL/lib -lvpl -ldl"
+elif [ -e ./buildVPL/lib64/libvpl.a ]; then
+    LIBVPL_LIBS="-L./buildVPL/lib64 -lvpl -ldl"
+else
+    cnf_write "could not find libvpl.a!"
+    exit 1
+fi
+LIBVPL_CFLAGS="-I./oneVPL/api/vpl"
+#if ! ${PKGCONFIG} --exists libvpl ; then
+#    cnf_write "libvpl could not be detected by ${PKGCONFIG}. [ PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ]"
+#else
+#    LIBVPL_LIBS=`${PKGCONFIG} --libs libvpl`
+#fi
+if cxx_check "libvpl" "${CXXFLAGS} ${EXTRACXXFLAGS} ${LIBVPL_CFLAGS} ${LDFLAGS} ${EXTRALDFLAGS} ${LIBVPL_LIBS}" "" "mfxsession.h" "MFXClose(0);" ; then
+    LDFLAGS="${LDFLAGS} ${LIBVPL_LIBS}"
+    CXXFLAGS="${CXXFLAGS} ${LIBVPL_CFLAGS}"
+    cnf_write "yes"
+else
+    cnf_write "libvpl not installed." 
+    exit 1
+fi
+
+SRCC_NVENCSDK=" \
+cuda_drvapi_dynlink.c
+"
+
+SRC_NVENCSDK=" \
+dynlink_nvcuvid.cpp
+"
+
+SRC_checkhwenccore=" \
+CuvidDecode.cpp          NVEncDevice.cpp          NVEncParam.cpp           NVEncUtil.cpp \
+convert_csp.cpp          cpu_info.cpp             gpu_info.cpp \
+gpuz_info.cpp            qsv_allocator.cpp        qsv_allocator_d3d11.cpp  qsv_allocator_d3d9.cpp \
+qsv_allocator_sys.cpp    qsv_allocator_va.cpp     qsv_device.cpp           qsv_hw_d3d11.cpp \
+qsv_hw_d3d9.cpp          qsv_hw_device.cpp        qsv_hw_va.cpp            qsv_hw_va_utils.cpp \
+qsv_hw_va_utils_drm.cpp  qsv_hw_va_utils_x11.cpp  qsv_prm.cpp              qsv_query.cpp \
+qsv_session.cpp          qsv_util.cpp             rgy_aspect_ratio.cpp     rgy_avlog.cpp \
+rgy_avutil.cpp           rgy_bitstream.cpp        rgy_bitstream_avx2.cpp   rgy_bitstream_avx512bw.cpp \
+rgy_caption.cpp          rgy_codepage.cpp         rgy_def.cpp              rgy_device.cpp \
+rgy_env.cpp              rgy_err.cpp              rgy_filesystem.cpp       rgy_frame.cpp \
+rgy_hdr10plus.cpp        rgy_ini.cpp              rgy_log.cpp              rgy_opencl.cpp \
+rgy_perf_counter.cpp     rgy_perf_monitor.cpp     rgy_pipe.cpp             rgy_pipe_linux.cpp \
+rgy_prm.cpp              rgy_resource.cpp         rgy_simd.cpp             rgy_status.cpp \
+rgy_thread_affinity.cpp  rgy_util.cpp             rgy_vulkan.cpp \
+vce_amf.cpp              vce_device.cpp           vce_device_vulkan.cpp    vce_param.cpp \
+vce_util.cpp \
+"
+
+SRC_checkhwencmain="checkhwenc.cpp checknvenc.cpp checkvce.cpp checkqsv.cpp"
+
+for src in $SRCC_NVENCSDK; do
+    SRCCS="$SRCCS NVEncSDK/Common/src/$src"
+done
+
+for src in $SRC_NVENCSDK; do
+    SRCS="$SRCS NVEncSDK/Common/src/$src"
+done
+
+for src in $SRC_checkhwenccore; do
+    SRCS="$SRCS checkhwenccore/$src"
+done
+
+for src in $SRC_checkhwencmain; do
+    SRCS="$SRCS checkhwencmain/$src"
+done
+
+ENCODER_REV=`git rev-list HEAD | wc --lines`
+
+cnf_write ""
+cnf_write "Creating config.mak, rgy_config.h..."
+echo "SRCS = $SRCS" >> config.mak
+echo "SRCCS = $SRCCS" >> config.mak
+echo "BINS = $BINS" >> config.mak
+write_config_mak "SRCDIR = $SRCDIR"
+write_config_mak "CC   = $CC"
+write_config_mak "CXX  = $CXX"
+write_config_mak "LD   = $CXX"
+write_config_mak "PROGRAM = $PROGRAM"
+write_config_mak "ENABLE_DEBUG = $ENABLE_DEBUG"
+write_config_mak "CCFLAGS  = $CXXFLAGS $CXXINC $EXTRACXXFLAGS $CUDA_CFLAGS"
+write_config_mak "CXXFLAGS = $CXXFLAGS -std=c++17 $CXXINC $EXTRACXXFLAGS $CUDA_CFLAGS"
+write_config_mak "LDFLAGS = $LDFLAGS $CUDA_LIBS $EXTRALDFLAGS $LIBAV_LIBS $LIBASS_LIBS $LIBVMAF_LIBS"
+write_config_mak "PREFIX = $PREFIX"
+echo "X86_64 = ${X86_64}"
+write_app_rev    "#define ENCODER_REV                  \"$ENCODER_REV\""
+write_enc_config "#define ENABLE_AVI_READER             0"
+write_enc_config "#define ENABLE_AVISYNTH_READER        0"
+write_enc_config "#define ENABLE_VAPOURSYNTH_READER     0"
+write_enc_config "#define ENABLE_AVSW_READER            0"     
+write_enc_config "#define ENABLE_SM_READER              0"
+write_enc_config "#define ENABLE_LIBASS_SUBBURN         0"
+write_enc_config "#define ENABLE_VMAF                   0"
+write_enc_config "#define ENABLE_OPENCL                 1"
+write_enc_config "#define ENABLE_AVCODEC_OUT_THREAD     0"
+write_enc_config "#define ENABLE_CPP_REGEX              $ENABLE_CPP_REGEX"
+write_enc_config "#define ENABLE_DTL                    0"
+write_enc_config "#define ENABLE_PERF_COUNTER           0"
+
+cnf_write "successfully generated config.mak, rgy_config.h"
+
+

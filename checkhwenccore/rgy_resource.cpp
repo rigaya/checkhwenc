@@ -29,7 +29,7 @@
 #include "rgy_tchar.h"
 #include "rgy_resource.h"
 
-#if !CHECKCLINFO
+#if !(CHECKCLINFO || CHECKHWENC)
 
 #if !(defined(_WIN32) || defined(_WIN64))
 extern "C" {
@@ -153,11 +153,11 @@ static const RGYResourceData RGY_RESOURCE_DATA[] = {
 };
 #endif //#if !(defined(_WIN32) || defined(_WIN64))
 
-#endif //#if !CHECKCLINFO
+#endif //#if !(CHECKCLINFO || CHECKHWENC)
 
 int getEmbeddedResource(void **data, const TCHAR *name, const TCHAR *type, HMODULE hModule) {
     *data = nullptr;
-#if !CHECKCLINFO
+#if !(CHECKCLINFO || CHECKHWENC)
 #if defined(_WIN32) || defined(_WIN64)
     //埋め込みデータを使用する
     if (hModule == NULL) {
@@ -186,13 +186,13 @@ int getEmbeddedResource(void **data, const TCHAR *name, const TCHAR *type, HMODU
     }
     return 0;
 #endif
-#else //#if !CHECKCLINFO
+#else //#if !(CHECKCLINFO || CHECKHWENC)
     return 0;
-#endif //#if !CHECKCLINFO
+#endif //#if !(CHECKCLINFO || CHECKHWENC)
 }
 
 std::string getEmbeddedResourceStr(const tstring& name, const tstring& type, HMODULE hModule) {
-#if !CHECKCLINFO
+#if !(CHECKCLINFO || CHECKHWENC)
     std::string data_str;
     {
         char* data = nullptr;
@@ -213,7 +213,7 @@ std::string getEmbeddedResourceStr(const tstring& name, const tstring& type, HMO
         }
     }
     return data_str;
-#else //#if !CHECKCLINFO
+#else //#if !(CHECKCLINFO || CHECKHWENC)
     return "";
-#endif //#if !CHECKCLINFO
+#endif //#if !(CHECKCLINFO || CHECKHWENC)
 }

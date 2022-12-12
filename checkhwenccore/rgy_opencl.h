@@ -49,7 +49,7 @@
 #else
 #define ENABLE_RGY_OPENCL_D3D9  0
 #define ENABLE_RGY_OPENCL_D3D11 0
-#define ENABLE_RGY_OPENCL_VA    0
+#define ENABLE_RGY_OPENCL_VA    1
 #endif
 #endif
 

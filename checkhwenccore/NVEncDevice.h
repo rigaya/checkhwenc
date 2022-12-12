@@ -33,8 +33,7 @@
 #pragma warning(disable: 4819)
 //ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。
 //データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include "cuda_drvapi_dynlink.h"
 #include "nvEncodeAPI.h"
 #include "CuvidDecode.h"
 #pragma warning(pop)
@@ -256,7 +255,7 @@ protected:
     std::shared_ptr<RGYLog>           m_log;
 };
 
-using unique_cuCtx = std::unique_ptr<std::remove_pointer<CUcontext>::type, decltype(&cuCtxDestroy)>;
+using unique_cuCtx = std::unique_ptr<std::remove_pointer<CUcontext>::type, decltype(cuCtxDestroy)>;
 using unique_vidCtxLock = std::unique_ptr<std::remove_pointer<CUvideoctxlock>::type, decltype(cuvidCtxLockDestroy)>;
 
 class NVGPUInfo {

@@ -41,11 +41,11 @@ static void show_help() {
     tstring str;
     str += strsprintf(_T("\n")
         _T("Information Options: \n")
-        _T("   --help                       print help\n")
-        _T("   --version                    print version info\n")
+        _T("-h,--help                       print help\n")
+        _T("-v,--version                    print version info\n")
         _T("   --log-level <string>         set log level\n")
         _T("                                  debug, info(default), warn, error\n")
-        _T("   --device <string>            set target device to check\n")
+        _T("   --encoder <string>            set target encoder to check\n")
         _T("                                  all(default), qsv, nvenc, vce, vcn\n"));
     _ftprintf(stdout, _T("%s\n"), str.c_str());
 }

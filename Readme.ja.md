@@ -35,6 +35,18 @@ NVIDIA NVENCが実行可能か確認します。
 - vcn
 AMD VCE/VCNが実行可能か確認します。
 
+### --opencl [&lt;string&gt;]
+OpenCLをチェックするモードに切り替えます。
+
+デフォルトではすべてのplatformのチェックを行いますが、引数で対象のplatformの選択できます。
+
+- intel
+- nvidia
+- amd
+
+### --opencl-name-only
+OpenCLをチェックするモードで、デバイス名のみ表示します。
+
 ## checkhwenc ソースコード
 - MIT license.
 

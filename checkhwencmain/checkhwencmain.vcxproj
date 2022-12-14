@@ -222,6 +222,7 @@
   <ItemGroup>
     <ClCompile Include="checkhwenc.cpp" />
     <ClCompile Include="checknvenc.cpp" />
+    <ClCompile Include="checkopencl.cpp" />
     <ClCompile Include="checkqsv.cpp" />
     <ClCompile Include="checkvce.cpp" />
   </ItemGroup>

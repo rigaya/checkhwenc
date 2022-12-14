@@ -34,6 +34,7 @@ int check_qsv_devices(const int deviceNum, const RGYParamLogLevel& loglevel);
 int show_nvenc_device_list(const RGYParamLogLevel& loglevel);
 int show_nvenc_hw(const int deviceid, const RGYParamLogLevel& loglevel);
 int show_vce_hw(const int deviceid, const RGYParamLogLevel& loglevel);
+int show_opencl_device_list(const tstring& platform_filter, const bool print_devname_only);
 
 void show_version();
 
@@ -45,8 +46,11 @@ static void show_help() {
         _T("-v,--version                    print version info\n")
         _T("   --log-level <string>         set log level\n")
         _T("                                  debug, info(default), warn, error\n")
-        _T("   --encoder <string>            set target encoder to check\n")
-        _T("                                  all(default), qsv, nvenc, vce, vcn\n"));
+        _T("   --encoder <string>           set target encoder to check\n")
+        _T("                                  all(default), qsv, nvenc, vce, vcn\n")
+        _T("   --opencl [<string>]          check opencl\n")
+        _T("                                  all(default), intel, nvidia, amd\n")
+        _T("   --opencl-name-only           show only opencl device name\n"));
     _ftprintf(stdout, _T("%s\n"), str.c_str());
 }
 
@@ -131,8 +135,12 @@ int _tmain(int argc, TCHAR **argv) {
 
     CheckHWEncTarget target = CheckHWEncTarget::ALL;
     int deviceID = -1;
-    for (int iarg = 1; iarg < argc - 1; iarg++) {
-        if (tstring(argv[iarg]) == _T("--encoder")) {
+    bool opencl_mode = false;
+    tstring opencl_platform_filter;
+    bool opencl_name_only = false;
+
+    for (int iarg = 1; iarg < argc; iarg++) {
+        if (iarg < argc - 1 && tstring(argv[iarg]) == _T("--encoder")) {
             if (tstring(argv[iarg + 1]) == _T("all")) {
                 target = CheckHWEncTarget::ALL;
             } else if (tstring(argv[iarg + 1]) == _T("qsv")) {
@@ -143,24 +151,37 @@ int _tmain(int argc, TCHAR **argv) {
                 target = CheckHWEncTarget::VCE;
             }
             iarg++;
+        } else if (tstring(argv[iarg]) == _T("--opencl")) {
+            opencl_mode = true;
+            if (iarg < argc-1 && argv[iarg + 1][0] != _T('-')) {
+                opencl_platform_filter = argv[iarg + 1];
+                iarg++;
+            }
+        } else if (tstring(argv[iarg]) == _T("--opencl-name-only")) {
+            opencl_mode = true;
+            opencl_name_only = true;
         }
     }
     int ret = 0;
-    switch (target) {
-    case CheckHWEncTarget::QSV:
-        ret = check_qsv_devices(deviceID, loglevelPrint);
-        break;
-    case CheckHWEncTarget::NVENC:
-        ret = show_nvenc_device_list(loglevelPrint);
-        break;
-    case CheckHWEncTarget::VCE:
-        ret = show_vce_hw(deviceID, loglevelPrint);
-        break;
-    case CheckHWEncTarget::ALL:
-        ret = check_devices_all(deviceID, loglevelPrint);
-        break;
-    default:
-        break;
+    if (opencl_mode) {
+        ret = show_opencl_device_list(opencl_platform_filter, opencl_name_only);
+    } else {
+        switch (target) {
+        case CheckHWEncTarget::QSV:
+            ret = check_qsv_devices(deviceID, loglevelPrint);
+            break;
+        case CheckHWEncTarget::NVENC:
+            ret = show_nvenc_device_list(loglevelPrint);
+            break;
+        case CheckHWEncTarget::VCE:
+            ret = show_vce_hw(deviceID, loglevelPrint);
+            break;
+        case CheckHWEncTarget::ALL:
+            ret = check_devices_all(deviceID, loglevelPrint);
+            break;
+        default:
+            break;
+        }
     }
     return ret;
 }

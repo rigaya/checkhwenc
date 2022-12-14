@@ -33,6 +33,18 @@ Check whether NVIDIA NVENC is available.
 - vcn
 Check whether AMD VCE/VCN is available.
 
+### --opencl [&lt;string&gt;]
+Switch to opencl check mode.
+
+All platforms will be checked by default, but OpenCL platform to check can be selcted as an parameter. 
+
+- intel
+- nvidia
+- amd
+
+### --opencl-name-only
+Show device name only in opencl check mode.
+
 ## checkhwenc source code
 - MIT license.
 

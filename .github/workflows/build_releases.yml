@@ -86,13 +86,13 @@ jobs:
           set CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v${{ matrix.cuda_ver_major }}.${{ matrix.cuda_ver_minor }}
           if "${{ matrix.cuda_ver_major }}" == "10" set CUDA_PATH_V10_1=%CUDA_PATH%
           if "${{ matrix.cuda_ver_major }}" == "11" set CUDA_PATH_V11_1=%CUDA_PATH%
-          msbuild NVEnc.sln /t:build /p:configuration=RelStatic /p:Platform=${{ matrix.platform }} -maxcpucount
+          msbuild checkhwenc.sln /t:build /p:configuration=Release /p:Platform=${{ matrix.platform }} -maxcpucount
 
       - name: Create Archieve
         id: archieve
         run: |
           mkdir checkhwenc_Release
-          copy _build\${{ matrix.platform }}\RelStatic\checkhwenc*.exe checkhwenc_Release
+          copy _build\${{ matrix.platform }}\Release\checkhwenc*.exe checkhwenc_Release
           7z a -mx9 checkhwenc_${{ needs.get_version_name.outputs.version_name }}_${{ matrix.platform }}.7z .\checkhwenc_Release\*
 
       - name: Check Version

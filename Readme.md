@@ -1,48 +1,39 @@
-﻿# checkclinfo
+﻿# checkhwenc
 
-checkclinfo will show result of GPU detection via OpenCL.
+checkhwenc will show HW encoder([QSVEnc](https://github.com/rigaya/QSVEnc)/[VCEEnc](https://github.com/rigaya/VCEEnc)/[VCEEnc](https://github.com/rigaya/VCEEnc)) availability on your system.
 
-This is equivalent to OpenCL check routines in [QSVEnc](https://github.com/rigaya/QSVEnc)/[VCEEnc](https://github.com/rigaya/VCEEnc)/[clfilters](https://github.com/rigaya/clfilters).
+This is equivalent to check routines in [QSVEnc](https://github.com/rigaya/QSVEnc)/[VCEEnc](https://github.com/rigaya/VCEEnc)/[VCEEnc](https://github.com/rigaya/VCEEnc).
 
 ## System Requirements
 ### Windows
 Windows 8.1/10/11 (x86/x64)  
 
-## Precautions for using checkclinfo
+## Precautions for using checkhwenc
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 ## Usage
 
-Running ```checkclinfo``` will show all GPU information provided by OpenCL.
+Running ```checkhwenc``` will show all supported HW encoder on your system.
 
-It is possible to check only GPU device name of selected platform.
+It is possible to check each hw encoder by adding ```--encoder``` option.
 
-checkclinfo -p intel --devname-only
-```
-device: Intel(R) Arc(TM) A380 Graphics
-device: Intel(R) UHD Graphics 770
-```
-
-checkclinfo -p nvidia --devname-only
-```
-device: NVIDIA GeForce RTX 4080
-device: NVIDIA GeForce GTX 1060 6GB
-```
-
-Return value of the ```checkclinfo``` will be 0 when device was found, otherwise 1 will be returned.
+```checkhwenc``` will return 0 is encoder is avaialble, and 1 if not.
 
 ## Options
 
-### -p &lt;string&gt;
-Select OpenCL platform to check.  
-- intel
-- nvidia
-- amd
+### --encoder &lt;string&gt;
 
-### --devname-only
-Show device name only.
+- qsv
+Check whether Intel QSV is available.
 
-## checkclinfo source code
+- nvenc
+Check whether NVIDIA NVENC is available.
+
+- vce
+- vcn
+Check whether AMD VCE/VCN is available.
+
+## checkhwenc source code
 - MIT license.
 
 

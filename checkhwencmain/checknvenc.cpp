@@ -41,6 +41,7 @@ int show_nvenc_device_list(const RGYParamLogLevel& loglevel) {
     NVEncCtrl nvEnc;
     if (NV_ENC_SUCCESS == nvEnc.Initialize(deviceID, loglevel.get(RGY_LOGT_CORE))
         && NV_ENC_SUCCESS == nvEnc.ShowDeviceList(cudaSchedule, skipHWDecodeCheck)) {
+        _ftprintf(stdout, _T("NVENC Available!\n"));
         return 0;
     }
     return 1;

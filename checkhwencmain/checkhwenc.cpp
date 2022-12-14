@@ -111,7 +111,11 @@ enum class CheckHWEncTarget {
 
 int _tmain(int argc, TCHAR **argv) {
     for (int iarg = 1; iarg < argc; iarg++) {
-        if (tstring(argv[iarg]) == _T("--help")) {
+        if (tstring(argv[iarg]) == _T("--version") || tstring(argv[iarg]) == _T("-v")) {
+            show_version();
+            return 0;
+        }
+        if (tstring(argv[iarg]) == _T("--help") || tstring(argv[iarg]) == _T("-h")) {
             show_help();
             return 0;
         }

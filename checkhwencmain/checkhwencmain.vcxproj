@@ -116,7 +116,7 @@
       <AdditionalIncludeDirectories>..\checkhwenccore</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Debug</Command>
+      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Debug $(DefaultPlatformToolset)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,7 +152,7 @@
       <AdditionalIncludeDirectories>..\checkhwenccore</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Release</Command>
+      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Release $(DefaultPlatformToolset)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -180,7 +180,7 @@
       <AdditionalIncludeDirectories>..\checkhwenccore</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Debug</Command>
+      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Debug $(DefaultPlatformToolset)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -216,7 +216,7 @@
       <AdditionalIncludeDirectories>..\checkhwenccore</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Release</Command>
+      <Command>"$(SolutionDir)BuildVPL.bat" $(Platform) Release $(DefaultPlatformToolset)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

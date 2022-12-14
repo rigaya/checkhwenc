@@ -28,7 +28,7 @@
 
 #include "qsv_query.h"
 
-int check_qsv_devices(const int deviceNum) {
+int check_qsv_devices(const int deviceNum, const RGYParamLogLevel& loglevel) {
     mfxVersion ver = { 0, 1 };
     if (check_lib_version(get_mfx_libhw_version((QSVDeviceNum)deviceNum), ver) != 0) {
         _ftprintf(stdout, _T("Success: QuickSyncVideo (hw encoding) available\n"));
@@ -36,7 +36,7 @@ int check_qsv_devices(const int deviceNum) {
         _ftprintf(stdout, _T("Error: QuickSyncVideo (hw encoding) unavailable\n"));
         return 1;
     }
-    auto devs = getDeviceNameList();
+    auto devs = getDeviceNameList(loglevel);
     if (devs.size() > 0) {
         for (auto& str : devs) {
             _ftprintf(stdout, _T("%s\n"), str.c_str());

@@ -440,7 +440,7 @@ tstring MakeDecFeatureStr(const QSVDeviceNum deviceNum, FeatureListStrType type,
 CodecCsp getHWDecCodecCsp(const QSVDeviceNum deviceNum, std::shared_ptr<RGYLog> log, const bool skipHWDecodeCheck);
 
 int GetImplListStr(tstring& str);
-std::vector<tstring> getDeviceNameList();
+std::vector<tstring> getDeviceNameList(const RGYParamLogLevel& loglevel);
 #if ENABLE_OPENCL
 std::optional<RGYOpenCLDeviceInfo> getDeviceCLInfoQSV(const QSVDeviceNum dev);
 #endif

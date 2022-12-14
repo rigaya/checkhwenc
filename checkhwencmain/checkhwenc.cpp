@@ -30,7 +30,7 @@
 #include "rgy_log.h"
 #include "rgy_util.h"
 
-int check_qsv_devices(const int deviceNum);
+int check_qsv_devices(const int deviceNum, const RGYParamLogLevel& loglevel);
 int show_nvenc_device_list(const RGYParamLogLevel& loglevel);
 int show_nvenc_hw(const int deviceid, const RGYParamLogLevel& loglevel);
 int show_vce_hw(const int deviceid, const RGYParamLogLevel& loglevel);
@@ -92,7 +92,7 @@ int parse_log_level_param(const TCHAR *option_name, const TCHAR *arg_value, RGYP
 int check_devices_all(const int deviceID, const RGYParamLogLevel& loglevel) {
     const TCHAR *separator = _T("\n----------------------------------------------------\n");
     _ftprintf(stdout, _T("Checking QSV...\n"));
-    const int ret_qsv = check_qsv_devices(deviceID);
+    const int ret_qsv = check_qsv_devices(deviceID, loglevel);
     _ftprintf(stdout, separator);
     _ftprintf(stdout, _T("Checking NVENC...\n"));
     const int ret_nvenc = show_nvenc_device_list(loglevel);
@@ -128,7 +128,7 @@ int _tmain(int argc, TCHAR **argv) {
     CheckHWEncTarget target = CheckHWEncTarget::ALL;
     int deviceID = -1;
     for (int iarg = 1; iarg < argc - 1; iarg++) {
-        if (tstring(argv[iarg]) == _T("--device")) {
+        if (tstring(argv[iarg]) == _T("--encoder")) {
             if (tstring(argv[iarg + 1]) == _T("all")) {
                 target = CheckHWEncTarget::ALL;
             } else if (tstring(argv[iarg + 1]) == _T("qsv")) {
@@ -144,7 +144,7 @@ int _tmain(int argc, TCHAR **argv) {
     int ret = 0;
     switch (target) {
     case CheckHWEncTarget::QSV:
-        ret = check_qsv_devices(deviceID);
+        ret = check_qsv_devices(deviceID, loglevelPrint);
         break;
     case CheckHWEncTarget::NVENC:
         ret = show_nvenc_device_list(loglevelPrint);

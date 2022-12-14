@@ -1628,12 +1628,12 @@ int GetImplListStr(tstring& str) {
     return (int)implList.size();
 }
 
-std::vector<tstring> getDeviceNameList() {
+std::vector<tstring> getDeviceNameList(const RGYParamLogLevel& loglevel) {
     std::vector<tstring> result;
-    auto log = std::make_shared<RGYLog>(nullptr, RGY_LOG_QUIET);
+    auto log = std::make_shared<RGYLog>(nullptr, loglevel);
     for (int idev = 1; idev <= (int)QSVDeviceNum::MAX; idev++) {
         auto dev = std::make_unique<QSVDevice>();
-        if (dev->init((QSVDeviceNum)idev, true, true) != RGY_ERR_NONE) {
+        if (dev->init((QSVDeviceNum)idev, true, HW_MEMORY, log, true) != RGY_ERR_NONE) {
             break;
         }
         auto info = dev->devInfo();
